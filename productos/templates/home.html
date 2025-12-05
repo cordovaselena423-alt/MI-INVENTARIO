@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventario Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                {% if logo_empresa %}
+                    <img src="{{ logo_empresa.url }}" alt="Logo" style="height: 40px; border-radius: 5px; margin-right: 10px; background: white; padding: 2px;">
+                {% else %}
+                    <i class="bi bi-boxes me-2"></i>
+                {% endif %}
+                INVENTARIO PRO
+            </a>
+            
+            <div class="d-flex gap-2 align-items-center">
+                
+                <a href="{% url 'reportes' %}" class="btn btn-outline-light btn-sm fw-bold">
+                    <i class="bi bi-file-earmark-bar-graph"></i> REPORTES
+                </a>
+
+                <a href="{% url 'contactos' %}" class="btn btn-outline-light btn-sm fw-bold">
+                    <i class="bi bi-people-fill"></i> CONTACTOS
+                </a>
+                
+                <a href="{% url 'configuracion' %}" class="btn btn-outline-light btn-sm fw-bold">
+                    <i class="bi bi-gear-fill"></i> CONFIGURACIÓN
+                </a>
+
+                <div class="vr bg-white mx-2 opacity-50"></div> 
+                
+                <span class="text-white me-2 small">{{ user.username }}</span>
+                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">SALIR</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-start border-primary border-5">
+                    <div class="card-body">
+                        <h6 class="text-muted text-uppercase small">Valor Inventario</h6>
+                        <h3 class="text-primary fw-bold">S/. {{ total_dinero }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-start border-warning border-5">
+                    <div class="card-body">
+                        <h6 class="text-muted text-uppercase small">Vencen (30 días)</h6>
+                        <h3 class="text-warning fw-bold">{{ lotes_vencimiento }} Lotes</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-start border-danger border-5">
+                    <div class="card-body">
+                        <h6 class="text-muted text-uppercase small">Stock Crítico</h6>
+                        <h3 class="text-danger fw-bold">{{ total_criticos }} Productos</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0 fw-bold text-secondary">Mis Productos</h5>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'entrada' %}" class="btn btn-success fw-bold">ENTRADA</a>
+                    <a href="{% url 'salida' %}" class="btn btn-warning fw-bold">SALIDA</a>
+                    <a href="{% url 'agregar' %}" class="btn btn-primary fw-bold">CREAR</a>
+                </div>
+            </div>
+            
+            <div class="card-body bg-light border-bottom">
+                 <form method="get">
+                    <div class="input-group">
+                        <input type="text" name="buscar" class="form-control" placeholder="Buscar producto..." value="{{ request.GET.buscar|default:'' }}">
+                        <button class="btn btn-dark" type="submit">Buscar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Img</th>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos %}
+                            <tr>
+                                <td class="ps-3">
+                                    {% if p.imagen %}
+                                    <img src="{{ p.imagen.url }}" style="width:40px; height:40px; object-fit:cover;" class="rounded">
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ p.nombre }}</td>
+                                <td>S/. {{ p.precio }}</td>
+                                <td><span class="fw-bold">{{ p.stock_total }}</span></td>
+                                <td>
+                                    {% if p.stock_total <= p.stock_minimo %}
+                                    <span class="badge bg-danger">Bajo</span>
+                                    {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'editar' p.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i></a>
+                                    <a href="{% url 'eliminar' p.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Borrar?');"><i class="bi bi-trash-fill"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-5 text-muted">No hay productos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

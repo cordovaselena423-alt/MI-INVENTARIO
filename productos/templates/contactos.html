@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contactos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light p-4">
+
+    <div class="container" style="max_width: 900px;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>👥 Clientes y Proveedores</h2>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+
+        <div class="row">
+            
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        <i class="bi bi-person-fill"></i> Clientes (Ventas)
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <label class="small text-muted">DNI o RUC</label>
+                                {{ cliente_form.dni_ruc }}
+                            </div>
+                            <div class="mb-2">
+                                <label class="small text-muted">Nombre Cliente</label>
+                                {{ cliente_form.nombre }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted">Teléfono</label>
+                                {{ cliente_form.telefono }}
+                            </div>
+                            <button type="submit" name="crear_cliente" class="btn btn-primary w-100 btn-sm">Guardar Cliente</button>
+                        </form>
+                        <hr>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush">
+                                {% for c in clientes %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="text-truncate" style="max-width: 150px;">{{ c.nombre }}</span>
+                                    <span class="badge bg-light text-dark border">{{ c.dni_ruc }}</span>
+                                </li>
+                                {% empty %}
+                                <li class="text-muted small text-center">Sin clientes.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white fw-bold">
+                        <i class="bi bi-truck"></i> Proveedores (Compras)
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-2">
+                                <label class="small text-muted">RUC Empresa</label>
+                                <div class="input-group">
+                                    {{ proveedor_form.ruc }}
+                                    <button type="button" class="btn btn-warning" onclick="consultarRUC(this)">
+                                        <i class="bi bi-search"></i> SUNAT
+                                    </button>
+                                </div>
+                                <small class="mensaje-exito text-success fw-bold" style="display:none;">¡Encontrado!</small>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="small text-muted">Razón Social</label>
+                                {{ proveedor_form.nombre }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted">Teléfono</label>
+                                {{ proveedor_form.telefono }}
+                            </div>
+
+                            <button type="submit" name="crear_proveedor" class="btn btn-success w-100 btn-sm">Guardar Proveedor</button>
+                        </form>
+                        <hr>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush">
+                                {% for p in proveedores %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="text-truncate" style="max-width: 150px;">{{ p.nombre }}</span>
+                                    <span class="badge bg-light text-dark border">{{ p.ruc }}</span>
+                                </li>
+                                {% empty %}
+                                <li class="text-muted small text-center">Sin proveedores.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Tu Token (Sacado de tu captura de pantalla)
+        const TOKEN_API = 'sk_12166.pR3GMmv3VLQc2ATQvCTltiyKBzSrNdcs';
+
+        async function consultarRUC(btn) {
+            // TRUCO: Buscamos los inputs que están AL LADO del botón presionado
+            // Así no nos confundimos con la columna de Clientes
+            const formContainer = btn.closest('form');
+            const rucInput = formContainer.querySelector('input[name="ruc"]');
+            const nombreInput = formContainer.querySelector('input[name="nombre"]');
+            const mensaje = formContainer.querySelector('.mensaje-exito');
+            
+            const ruc = rucInput.value.trim();
+
+            if (ruc.length !== 11) {
+                alert("El RUC debe tener 11 dígitos.");
+                return;
+            }
+
+            // Indicador de carga
+            const textoOriginal = nombreInput.value;
+            nombreInput.value = "Buscando...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`https://api.apis.net.pe/v2/sunat/ruc?numero=${ruc}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${TOKEN_API}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.razonSocial) {
+                    nombreInput.value = data.razonSocial;
+                    // También podemos llenar la dirección si tuvieras el campo
+                    mensaje.style.display = 'block';
+                    setTimeout(() => mensaje.style.display = 'none', 3000);
+                } else {
+                    alert("RUC no encontrado.");
+                    nombreInput.value = textoOriginal;
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión. Revisa tu internet.");
+                nombreInput.value = textoOriginal;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+</html>

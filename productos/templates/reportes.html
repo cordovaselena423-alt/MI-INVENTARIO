@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Movimientos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light p-4">
+
+    <div class="container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>📊 Reporte de Movimientos</h2>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body bg-white">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha Inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha Fin</label>
+                        <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-filter"></i> Filtrar Reporte
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row mb-4 text-center">
+            <div class="col-md-6">
+                <div class="card bg-success text-white shadow-sm">
+                    <div class="card-body">
+                        <h5>Total Entradas</h5>
+                        <h2>{{ total_entradas }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-danger text-white shadow-sm">
+                    <div class="card-body">
+                        <h5>Total Salidas</h5>
+                        <h2>{{ total_salidas }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Tipo</th>
+                                <th>Cant.</th>
+                                <th>Contacto (Cliente/Prov)</th>
+                                <th class="text-center">Acción</th> </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in movimientos %}
+                            <tr>
+                                <td>{{ m.fecha|date:"d/m/Y H:i" }}</td>
+                                <td class="fw-bold">{{ m.producto.nombre }}</td>
+                                <td>
+                                    {% if m.tipo == 'ENTRADA' %}
+                                        <span class="badge bg-success">ENTRADA</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">SALIDA</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold fs-5">{{ m.cantidad }}</td>
+                                
+                                <td class="text-muted small">
+                                    {% if m.cliente %}
+                                        <i class="bi bi-person"></i> {{ m.cliente.nombre }}
+                                    {% elif m.proveedor %}
+                                        <i class="bi bi-truck"></i> {{ m.proveedor.nombre }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-center">
+                                    <a href="{% url 'generar_pdf' m.id %}" class="btn btn-sm btn-outline-danger" title="Imprimir Nota">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    No se encontraron movimientos en este rango de fechas.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
