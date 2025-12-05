@@ -140,3 +140,14 @@ DATABASES = {
         default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
     )
 }
+# Configuración para producción
+import os
+
+if 'RENDER' in os.environ:
+    # Configuración específica para Render
+    DEBUG = False
+    ALLOWED_HOSTS = ['.onrender.com']
+    
+    # Archivos estáticos
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
