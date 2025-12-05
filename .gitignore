@@ -1,0 +1,21 @@
+# Base de datos SQLite
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos de media (subidos por usuarios)
+media/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Entorno
+.env
+.env.local
+
+# Sistema
+.DS_Store
+Thumbs.db
